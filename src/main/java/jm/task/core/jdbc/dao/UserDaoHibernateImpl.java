@@ -10,16 +10,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
+    Transaction transaction = null;
+
     public UserDaoHibernateImpl() {
 
     }
 
     @Override
     public void createUsersTable() {
-        Session session = null;
+
         Transaction transaction = null;
-        try {
-            session = Util.getSession();
+        try (Session session = Util.getSession()) {
             transaction = session.beginTransaction();
             session.createSQLQuery("CREATE TABLE IF NOT EXISTS users " +
                     "(id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
@@ -28,98 +29,105 @@ public class UserDaoHibernateImpl implements UserDao {
                     "age TINYINT)").executeUpdate();
             transaction.commit();
             System.out.println("The table has been successfully created");
-        } catch (HibernateException he) {
-            he.printStackTrace();
-            Util.rollbackQuietly(transaction);
-        } finally {
-            Util.closeSession(session);
+        } catch (HibernateException e) {
+            if (transaction != null) {
+                transaction.rollback();
+
+            }
+
         }
     }
 
     @Override
     public void dropUsersTable() {
-        Session session = null;
+
         Transaction transaction = null;
-        try {
-            session = Util.getSession();
+        try (Session session = Util.getSession()) {
             transaction = session.beginTransaction();
-            session.createSQLQuery("DROP TABLE IF EXISTS users").executeUpdate();
+            String sql = "DROP TABLE IF EXISTS users";
+            session.createSQLQuery(sql).executeUpdate();
             transaction.commit();
-        } catch (HibernateException he) {
-            he.printStackTrace();
-            Util.rollbackQuietly(transaction);
-        } finally {
-            Util.closeSession(session);
+            System.out.println("Table deleted");
+        } catch (HibernateException e) {
+
+            if (transaction != null) {
+                transaction.rollback();
+            }
         }
     }
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        Session session = null;
+
         Transaction transaction = null;
-        try {
-            session = Util.getSession();
+        try (Session session = Util.getSession()) {
+
             transaction = session.beginTransaction();
-            session.save(new User(name, lastName, age));
+
+            User user = new User(name, lastName, age);
+            session.save(user);
             transaction.commit();
-        } catch (HibernateException he) {
-            he.printStackTrace();
-            Util.rollbackQuietly(transaction);
-        } finally {
-            Util.closeSession(session);
+        } catch (HibernateException e) {
+
+            if (transaction != null) {
+                transaction.rollback();
+            }
         }
     }
 
     @Override
     public void removeUserById(long id) {
-        Session session = null;
+
         Transaction transaction = null;
-        try {
-            session = Util.getSession();
+        try (Session session = Util.getSession()) {
+
             transaction = session.beginTransaction();
-            session.createQuery("delete from User where id = :id");
+            User user = session.load(User.class, id);
+            session.delete(user);
             transaction.commit();
-        } catch (HibernateException he) {
-            he.printStackTrace();
-            Util.rollbackQuietly(transaction);
-        } finally {
-            Util.closeSession(session);
+            System.out.println("User has been successfully deleted");
+        } catch (HibernateException e) {
+
+            if (transaction != null) {
+                transaction.rollback();
+            }
         }
     }
 
     @Override
     public List<User> getAllUsers() {
-        Session session = null;
+
         Transaction transaction = null;
-        List<User> users = new ArrayList<>();
-        try {
-            session = Util.getSession();
+
+        try (Session session = Util.getSession()) {
+
             transaction = session.beginTransaction();
+            List<User> users = new ArrayList<>();
             users = session.createQuery("from User", User.class).getResultList();
             transaction.commit();
-        } catch (HibernateException he) {
-            he.printStackTrace();
-            Util.rollbackQuietly(transaction);
-        } finally {
-            Util.closeSession(session);
+
+            return users;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
         }
-        return users;
+        return null;
     }
 
     @Override
     public void cleanUsersTable() {
-        Session session = null;
+
         Transaction transaction = null;
-        try {
-            session = Util.getSession();
+        try (Session session = Util.getSession()) {
             transaction = session.beginTransaction();
             session.createQuery("delete from User").executeUpdate();
             transaction.commit();
         } catch (HibernateException he) {
-            he.printStackTrace();
-            Util.rollbackQuietly(transaction);
-        } finally {
-            Util.closeSession(session);
+            if (transaction != null) {
+                transaction.rollback();
+            }
         }
     }
 }

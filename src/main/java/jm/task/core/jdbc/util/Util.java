@@ -1,13 +1,11 @@
 package jm.task.core.jdbc.util;
 
 import jm.task.core.jdbc.model.User;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
+import org.hibernate.*;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
 import java.sql.*;
@@ -19,69 +17,11 @@ public class Util {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "SAYAN007my";
 
-    private static boolean initialized;
-
-    public static void initDriver() {
-        if (!initialized) {
-            try {
-                Class.forName(JDBC_DRIVER);
-            } catch (ClassNotFoundException ex) {
-                ex.printStackTrace();
-                throw new RuntimeException("Can't initialize JDBC driver");
-            }
-            initialized = true;
-        }
-    }
-
-    public static Connection getConnection() throws SQLException {
-        initDriver();
-        Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-        conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-        conn.setAutoCommit(false);
-        return conn;
-    }
-
-    public static void rollbackQuietly(Connection conn) {
-        if (conn != null) {
-            try {
-                conn.rollback();
-                System.out.println("JDBC Transaction rolled back successfully");
-            } catch (SQLException erb) {
-                System.out.println("SQLException in rollback" + erb.getMessage());
-            }
-        }
-    }
-
-    public static void closeResultSet(ResultSet resultSet) {
-        if (resultSet != null) {
-            try {
-                resultSet.close();
-            } catch (SQLException ignored) {
-            }
-        }
-    }
-
-    public static void closeStatement(Statement statement) {
-        if (statement != null) {
-            try {
-                statement.close();
-            } catch (SQLException ignored) {
-            }
-        }
-    }
-
-    public static void closeConnection(Connection connection) {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException ignored) {
-            }
-        }
-    }
     /*======================Configuration for Hibernate===============================*/
 
     private static StandardServiceRegistry serviceRegistry;
     private static SessionFactory sessionFactory;
+
 
     private static Properties getProperties() {
         Properties properties = new Properties();
@@ -144,5 +84,7 @@ public class Util {
                 System.out.println("HibernateException in rollback" + he.getMessage());
             }
         }
+
+
     }
 }
